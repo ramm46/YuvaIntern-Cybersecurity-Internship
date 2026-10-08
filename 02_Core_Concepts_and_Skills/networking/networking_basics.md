@@ -40,13 +40,13 @@ endpoint on a host.
 ### Common Ports
 
 | Port | Service/Protocol |
-|---|---|
-| 22 | SSH |
-| 53 | DNS |
-| 80 | HTTP |
-| 443 | HTTPS |
-| 25 | SMTP |
-| 3389 | RDP |
+|------|------------------|
+| 22   | SSH              |
+| 53   | DNS              |
+| 80   | HTTP             |
+| 443  | HTTPS            |
+| 25   | SMTP             |
+| 3389 | RDP              |
 
 Example:
 
