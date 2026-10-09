@@ -10,3 +10,15 @@ This repository documents my cybersecurity internship journey.
 ## Progress Tracking
 
 Each stage contains learning materials, practical exercises, and assessment activities.
+
+## Tools Used
+
+- Python
+- Git and GitHub
+- Visual Studio Code
+
+## Security Learning Goals
+
+- Understand common cybersecurity threats.
+- Practice secure coding fundamentals.
+- Document practical security exercises.
