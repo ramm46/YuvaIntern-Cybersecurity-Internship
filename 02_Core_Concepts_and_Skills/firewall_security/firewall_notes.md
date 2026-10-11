@@ -39,10 +39,10 @@ Select-Object Name, Enabled, DefaultInboundAction, DefaultOutboundAction
 ### Observed Results
 
 | Profile | Enabled |
-|---|---|
-| Domain | True |
-| Private | True |
-| Public | True |
+|---------|---------|
+| Domain  | True    |
+| Private | True    |
+| Public  | True    |
 
 Observation: All three reported firewall profiles were enabled.
 
