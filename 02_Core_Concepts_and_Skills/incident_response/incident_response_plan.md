@@ -21,19 +21,19 @@ The program accepts an alert type and severity, validates both inputs, and displ
 
 ### Test Results
 
-| Test | Input | Expected Behavior | Observed Result | Status |
-|---|---|---|---|---|
-| 1 | ransomware, low | Ransomware response; review and monitor | Matched | Pass |
-| 2 | ransomware, medium | Ransomware response; prompt investigation | Matched | Pass |
-| 3 | ransomware, high | Ransomware response; urgent escalation | Matched | Pass |
-| 4 | phishing, low | Phishing response; review and monitor | Matched | Pass |
-| 5 | phishing, medium | Phishing response; prompt investigation | Matched | Pass |
-| 6 | phishing, high | Phishing response; urgent escalation | Matched | Pass |
-| 7 | unknown, low | Further investigation; review and monitor | Matched | Pass |
-| 8 | unknown, medium | Further investigation; prompt investigation | Matched | Pass |
-| 9 | unknown, high | Further investigation; urgent escalation | Matched | Pass |
-| 10 | malware, high | Reject invalid alert type | Invalid alert type message | Pass |
-| 11 | ransomware, urgent | Reject invalid severity | Invalid severity message | Pass |
+| Test | Input              | Expected Behavior                             | Observed Result           | Status|
+|------|--------------------|-----------------------------------------------|---------------------------|-------|
+| 1    | ransomware, low    | Ransomware response; review and monitor       | Matched                   | Pass  |
+| 2    | ransomware, medium | Ransomware response; prompt investigation     | Matched                   | Pass  |
+| 3    | ransomware, high   | Ransomware response; urgent escalation        | Matched                   | Pass  |
+| 4    | phishing, low      | Phishing response; review and monitor         | Matched                   | Pass  |
+| 5    | phishing, medium   | Phishing response; prompt investigation       | Matched                   | Pass  |
+| 6    | phishing, high     | Phishing response; urgent escalation          | Matched                   | Pass  |
+| 7    | unknown, low       | Further investigation; review and monitor     | Matched                   | Pass  |
+| 8    | unknown, medium    | Further investigation; prompt investigation   | Matched                   | Pass  |
+| 9    | unknown, high      | Further investigation; urgent escalation      | Matched                   | Pass  |
+| 10   | malware, high      | Reject invalid alert type                     | Invalid alert type message| Pass  |
+| 11   | ransomware, urgent | Reject invalid severity                       | Invalid severity message  | Pass  |
 
 ### Incident Response Workflow
 
