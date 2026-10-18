@@ -1,0 +1,69 @@
+
+from fastapi import FastAPI, File, HTTPException, UploadFile
+
+from backend.app.detection_engine import detect_security_alerts
+from backend.app.log_parser import parse_security_logs
+
+app = FastAPI(
+    title="SentinelLite API",
+    description="A rule-based security log analysis API.",
+    version="1.0.0",
+)
+
+
+@app.get("/")
+def health_check():
+    return {
+        "status": "running",
+        "application": "SentinelLite",
+        "version": "1.0.0",
+    }
+
+
+@app.post("/api/analyze")
+async def analyze_logs(file: UploadFile = File(...)):
+    """Upload a CSV file and return validation results and alerts."""
+
+    if not file.filename or not file.filename.lower().endswith(".csv"):
+        raise HTTPException(
+            status_code=400,
+            detail="Please upload a CSV file.",
+        )
+
+    try:
+        content = await file.read()
+
+        if not content:
+            raise HTTPException(
+                status_code=400,
+                detail="Uploaded file is empty.",
+            )
+
+        csv_content = content.decode("utf-8-sig")
+        result = parse_security_logs(csv_content)
+
+        alerts = detect_security_alerts(result["valid_rows"])
+
+        return {
+            "filename": file.filename,
+            "summary": {
+                "total_rows": result["total_rows"],
+                "valid_rows": result["valid_count"],
+                "invalid_rows": result["invalid_count"],
+                "alerts_detected": len(alerts),
+            },
+            "invalid_rows": result["invalid_rows"],
+            "alerts": alerts,
+        }
+
+    except UnicodeDecodeError:
+        raise HTTPException(
+            status_code=400,
+            detail="File must use UTF-8 text encoding.",
+        )
+
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    finally:
+        await file.close()
