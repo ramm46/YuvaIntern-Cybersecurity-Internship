@@ -101,3 +101,27 @@ def test_csv_with_missing_columns_is_rejected():
 
     assert response.status_code == 400
     assert "Missing required columns" in response.json()["detail"]
+
+
+def test_oversized_csv_is_rejected():
+    oversized_content = b"x" * (5 * 1024 * 1024 + 1)
+
+    response = client.post(
+        "/api/analyze",
+        files={
+            "file": (
+                "large.csv",
+                oversized_content,
+                "text/csv",
+            )
+        },
+    )
+
+    assert response.status_code == 413
+    assert response.json()["detail"] == (
+        "File too large. Maximum allowed size is 5 MB."
+    )
+
+
+
+

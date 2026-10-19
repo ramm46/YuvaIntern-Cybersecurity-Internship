@@ -20,9 +20,13 @@ def health_check():
     }
 
 
+
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
+
+
 @app.post("/api/analyze")
 async def analyze_logs(file: UploadFile = File(...)):
-    """Upload a CSV file and return validation results and alerts."""
+    """Upload a size-limited CSV file and return validation results."""
 
     if not file.filename or not file.filename.lower().endswith(".csv"):
         raise HTTPException(
@@ -31,7 +35,13 @@ async def analyze_logs(file: UploadFile = File(...)):
         )
 
     try:
-        content = await file.read()
+        content = await file.read(MAX_FILE_SIZE + 1)
+
+        if len(content) > MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail="File too large. Maximum allowed size is 5 MB.",
+            )
 
         if not content:
             raise HTTPException(
@@ -41,7 +51,6 @@ async def analyze_logs(file: UploadFile = File(...)):
 
         csv_content = content.decode("utf-8-sig")
         result = parse_security_logs(csv_content)
-
         alerts = detect_security_alerts(result["valid_rows"])
 
         return {
@@ -67,3 +76,4 @@ async def analyze_logs(file: UploadFile = File(...)):
 
     finally:
         await file.close()
+
