@@ -21,6 +21,9 @@ OPTIONAL_COLUMNS = {
 
 ALLOWED_COLUMNS = REQUIRED_COLUMNS | OPTIONAL_COLUMNS
 
+# Prevent individual CSV fields from becoming excessively large.
+MAX_CSV_FIELD_SIZE = 100_000
+
 
 def parse_security_logs(csv_content: str) -> dict[str, Any]:
     """
@@ -31,7 +34,11 @@ def parse_security_logs(csv_content: str) -> dict[str, Any]:
     """
     if not csv_content or not csv_content.strip():
         raise ValueError("CSV file is empty.")
+    
+    previous_field_limit = csv.field_size_limit()
+    csv.field_size_limit(MAX_CSV_FIELD_SIZE)
 
+    
     try:
         reader = csv.DictReader(io.StringIO(csv_content, newline=""))
         headers = reader.fieldnames
@@ -40,6 +47,9 @@ def parse_security_logs(csv_content: str) -> dict[str, Any]:
             raise ValueError("CSV header row is missing.")
 
         headers = [header.strip() for header in headers]
+
+        if any(not header for header in headers):
+            raise ValueError("CSV contains an empty column name.")
 
         if len(headers) != len(set(headers)):
             raise ValueError("CSV contains duplicate column names.")
@@ -60,7 +70,6 @@ def parse_security_logs(csv_content: str) -> dict[str, Any]:
         invalid_rows = []
 
         for row_number, row in enumerate(reader, start=2):
-            # DictReader uses a None key for extra values beyond the header.
             if None in row:
                 invalid_rows.append({
                     "row_number": row_number,
@@ -68,7 +77,6 @@ def parse_security_logs(csv_content: str) -> dict[str, Any]:
                 })
                 continue
 
-            # Missing trailing values are represented as None.
             if any(value is None for value in row.values()):
                 invalid_rows.append({
                     "row_number": row_number,
@@ -77,7 +85,7 @@ def parse_security_logs(csv_content: str) -> dict[str, Any]:
                 continue
 
             normalized_row = {
-                key: value.strip() if value is not None else ""
+                key: value.strip()
                 for key, value in row.items()
             }
 
@@ -108,4 +116,13 @@ def parse_security_logs(csv_content: str) -> dict[str, Any]:
         }
 
     except csv.Error as exc:
+        if "field larger than field limit" in str(exc):
+            raise ValueError(
+                f"CSV field exceeds the maximum allowed size "
+                f"of {MAX_CSV_FIELD_SIZE} characters."
+            ) from exc
+
         raise ValueError(f"Invalid CSV structure: {exc}") from exc
+    finally:
+        csv.field_size_limit(previous_field_limit)
+

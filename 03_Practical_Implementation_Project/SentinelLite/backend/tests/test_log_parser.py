@@ -41,3 +41,19 @@ def test_invalid_row_is_reported():
     assert result["valid_count"] == 1
     assert result["invalid_count"] == 1
     assert result["invalid_rows"][0]["row_number"] == 3
+
+
+def test_oversized_csv_field_is_rejected():
+    from backend.app.log_parser import MAX_CSV_FIELD_SIZE
+
+    oversized_value = "x" * (MAX_CSV_FIELD_SIZE + 1)
+
+    csv_content = (
+        "event_id,timestamp,event_type,source,actor,"
+        "action,outcome,details\n"
+        f"EVT-001,2026-10-18T09:00:00Z,authentication,"
+        f"auth-service,alice,login,failure,{oversized_value}\n"
+    )
+
+    with pytest.raises(ValueError, match="maximum allowed size"):
+        parse_security_logs(csv_content)
