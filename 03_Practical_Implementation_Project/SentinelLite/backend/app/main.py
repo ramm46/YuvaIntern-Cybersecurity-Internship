@@ -3,6 +3,7 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 
 from backend.app.detection_engine import detect_security_alerts
 from backend.app.log_parser import parse_security_logs
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="SentinelLite API",
@@ -10,6 +11,13 @@ app = FastAPI(
     version="1.0.0",
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 def health_check():
