@@ -3,6 +3,16 @@
 
 import { useState } from "react";
 
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  Legend,
+} from "recharts";
+
+
 type Summary = {
   total_rows: number;
   valid_rows: number;
@@ -127,7 +137,21 @@ export default function Home() {
   }
 
   const alerts = result?.alerts ?? [];
+
+  const severityData = ["High", "Medium", "Low"].map((severity) => ({
+    name: severity,
+    value: alerts.filter(
+      (alert) =>
+        field(alert, ["severity", "level", "risk"], "Medium").toLowerCase() ===
+        severity.toLowerCase()
+    ).length,
+  }));
   
+  const chartColors: Record<string, string> = {
+    High: "#fb7185",
+    Medium: "#fbbf24",
+    Low: "#22d3ee",
+  };
   const filteredAlerts = alerts.filter((alert) => {
     const severity = field(alert, ["severity", "level", "risk"], "Medium");
     const matchesSeverity =
@@ -236,6 +260,7 @@ export default function Home() {
         </header>
 
         <div className="space-y-8 p-5 sm:p-7 lg:p-9">
+
           <section id="overview">
             <div className="mb-5">
               <p className="text-sm text-slate-400">Welcome to SentinelLite</p>
@@ -254,6 +279,54 @@ export default function Home() {
                   <p className="mt-2 text-xs text-slate-500">{metric.note}</p>
                 </article>
               ))}
+            </div>
+             <div className="mt-6 rounded-2xl border border-slate-800 bg-[#0d1829] p-5 sm:p-6">
+              <div className="mb-4">
+                <h3 className="font-semibold">Alert Analytics</h3>
+                <p className="mt-1 text-sm text-slate-500">
+                  Severity distribution for the analyzed log file
+                </p>
+              </div>
+
+              {!result ? (
+                <div className="flex min-h-56 items-center justify-center text-center text-sm text-slate-500">
+                  Upload and analyze a CSV to view alert analytics.
+                </div>
+              ) : alerts.length === 0 ? (
+                <div className="flex min-h-56 items-center justify-center text-sm text-emerald-300">
+                  No alerts detected.
+                </div>
+              ) : (
+                <div className="h-72 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={severityData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={65}
+                        outerRadius={100}
+                        paddingAngle={4}
+                      >
+                        {severityData.map((entry) => (
+                          <Cell key={entry.name} fill={chartColors[entry.name]} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#0c1627",
+                          border: "1px solid #334155",
+                          borderRadius: "12px",
+                          color: "#f1f5f9",
+                        }}
+                      />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             </div>
           </section>
 
