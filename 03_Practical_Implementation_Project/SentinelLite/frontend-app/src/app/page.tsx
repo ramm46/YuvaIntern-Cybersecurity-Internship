@@ -58,6 +58,8 @@ export default function Home() {
   const [result, setResult] = useState<ApiResult | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [severityFilter, setSeverityFilter] = useState("All");
+  const [searchTerm, setSearchTerm] = useState("");
 
   function selectFile(selected: File | null) {
     setError("");
@@ -125,6 +127,29 @@ export default function Home() {
   }
 
   const alerts = result?.alerts ?? [];
+  
+  const filteredAlerts = alerts.filter((alert) => {
+    const severity = field(alert, ["severity", "level", "risk"], "Medium");
+    const matchesSeverity =
+      severityFilter === "All" ||
+      severity.toLowerCase() === severityFilter.toLowerCase();
+  
+    const searchableText = [
+      field(alert, ["title", "name", "description", "message"]),
+      field(alert, ["actor", "username", "user"]),
+      field(alert, ["rule_id", "rule", "rule_code", "detection_id"]),
+      field(alert, ["timestamp", "time", "event_time", "detected_at"]),
+    ]
+      .join(" ")
+      .toLowerCase();
+  
+    const matchesSearch = searchableText.includes(
+      searchTerm.trim().toLowerCase()
+    );
+  
+    return matchesSeverity && matchesSearch;
+  });
+  
 
   const metrics = [
     {
@@ -172,6 +197,7 @@ export default function Home() {
             <p className="text-[10px] tracking-[0.15em] text-slate-500">SECURITY OPERATIONS</p>
           </div>
         </div>
+
 
         <p className="mb-3 mt-9 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Workspace</p>
         <nav className="space-y-2">
@@ -265,6 +291,41 @@ export default function Home() {
               <span className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs text-slate-400">{result ? `${alerts.length} alerts` : "No results"}</span>
             </div>
 
+            <div className="space-y-4 border-b border-slate-800 p-5 sm:px-6">
+  <input
+    type="search"
+    value={searchTerm}
+    onChange={(event) => setSearchTerm(event.target.value)}
+    placeholder="Search alert, actor, rule ID..."
+    aria-label="Search security alerts"
+    className="w-full rounded-xl border border-slate-700 bg-[#091321] px-4 py-3 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-cyan-400 sm:max-w-md"
+  />
+
+  <div className="flex flex-wrap items-center gap-2">
+    <span className="mr-1 text-xs text-slate-500">Severity:</span>
+
+    {["All", "High", "Medium", "Low"].map((severity) => (
+      <button
+        key={severity}
+        type="button"
+        onClick={() => setSeverityFilter(severity)}
+        aria-pressed={severityFilter === severity}
+        className={`rounded-lg border px-3 py-2 text-xs font-medium transition ${
+          severityFilter === severity
+            ? "border-cyan-400/40 bg-cyan-400/10 text-cyan-200"
+            : "border-slate-700 text-slate-400 hover:border-slate-500 hover:text-white"
+        }`}
+      >
+        {severity}
+      </button>
+    ))}
+  </div>
+
+  <p className="text-xs text-slate-500">
+    Showing {filteredAlerts.length} of {alerts.length} alerts
+  </p>
+</div>
+
             <div className="overflow-x-auto">
               <table className="w-full min-w-[700px] text-left text-sm">
                 <thead className="bg-[#101d30] text-xs uppercase tracking-wider text-slate-500">
@@ -277,7 +338,7 @@ export default function Home() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/80">
-                  {alerts.map((alert, index) => {
+                {filteredAlerts.map((alert, index) => {
                     const title = field(alert, ["title", "name", "description", "message"], "Suspicious activity detected");
                     const severity = field(alert, ["severity", "level", "risk"], "Medium");
                     return (
@@ -293,8 +354,15 @@ export default function Home() {
                       </tr>
                     );
                   })}
-                  {result && alerts.length === 0 && <tr><td colSpan={5} className="px-5 py-10 text-center text-sm text-slate-500">No security alerts detected in this CSV.</td></tr>}
-                  {!result && <tr><td colSpan={5} className="px-5 py-10 text-center text-sm text-slate-500">No analysis results yet. Upload a CSV and select Analyze Logs.</td></tr>}
+                  {result && filteredAlerts.length === 0 && (
+  <tr>
+    <td colSpan={5} className="px-5 py-10 text-center text-sm text-slate-500">
+      {alerts.length === 0
+        ? "No security alerts detected in this CSV."
+        : "No alerts match your search or severity filter."}
+    </td>
+  </tr>
+)}
                 </tbody>
               </table>
             </div>
