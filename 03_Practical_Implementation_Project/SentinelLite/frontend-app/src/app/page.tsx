@@ -174,6 +174,52 @@ export default function Home() {
     return matchesSeverity && matchesSearch;
   });
   
+  function exportFilteredAlerts() {
+    if (filteredAlerts.length === 0) return;
+
+    const headers = [
+      "Alert Title",
+      "Actor",
+      "Rule ID",
+      "Timestamp",
+      "Severity",
+    ];
+
+    const rows = filteredAlerts.map((alert) => [
+      field(alert, ["title", "name", "description", "message"], "Suspicious activity detected"),
+      field(alert, ["actor", "username", "user"]),
+      field(alert, ["rule_id", "rule", "rule_code", "detection_id"]),
+      field(alert, ["timestamp", "time", "event_time", "detected_at"]),
+      field(alert, ["severity", "level", "risk"], "Medium"),
+    ]);
+
+    const escapeCsv = (value: string) =>
+      `"${value.replace(/"/g, '""')}"`;
+
+    const csvContent = [headers, ...rows]
+      .map((row) =>
+        row.map((value) => escapeCsv(String(value))).join(",")
+      )
+      .join("\r\n");
+
+    const blob = new Blob(["\uFEFF", csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const timestamp = new Date()
+      .toISOString()
+      .replace(/[:.]/g, "-");
+
+    link.href = url;
+    link.download = `sentinellite_alerts_${timestamp}.csv`;
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
 
   const metrics = [
     {
@@ -361,7 +407,22 @@ export default function Home() {
                 <h3 className="font-semibold">Security Alerts</h3>
                 <p className="mt-1 text-xs text-slate-500">{result ? "Detection engine results for the uploaded CSV" : "Upload and analyze a CSV to view real alerts"}</p>
               </div>
-              <span className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs text-slate-400">{result ? `${alerts.length} alerts` : "No results"}</span>
+              
+<div className="flex flex-wrap items-center gap-2">
+  <span className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs text-slate-400">
+    {result ? `${alerts.length} alerts` : "No results"}
+  </span>
+
+  <button
+    type="button"
+    onClick={exportFilteredAlerts}
+    disabled={!result || filteredAlerts.length === 0}
+    className="rounded-lg border border-cyan-400/30 bg-cyan-400/10 px-3 py-2 text-xs font-medium text-cyan-200 transition hover:bg-cyan-400/20 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-800 disabled:text-slate-500"
+  >
+    ↓ Export CSV ({filteredAlerts.length})
+  </button>
+</div>
+
             </div>
 
             <div className="space-y-4 border-b border-slate-800 p-5 sm:px-6">
