@@ -10,6 +10,11 @@ import {
   ResponsiveContainer,
   Tooltip,
   Legend,
+  BarChart,
+  Bar,
+  CartesianGrid,
+  XAxis,
+  YAxis,
 } from "recharts";
 
 
@@ -137,6 +142,50 @@ export default function Home() {
   }
 
   const alerts = result?.alerts ?? [];
+
+  const timelineData = (() => {
+    const counts: Record<string, { timestamp: number; count: number }> = {};
+
+    alerts.forEach((alert) => {
+      const rawTimestamp = field(
+        alert,
+        ["timestamp", "time", "event_time", "detected_at"],
+        "",
+      );
+      if (!rawTimestamp || rawTimestamp === "—") return;
+
+      const date = new Date(rawTimestamp);
+      if (Number.isNaN(date.getTime())) return;
+
+      const minuteTimestamp = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        date.getHours(),
+        date.getMinutes(),
+      ).getTime();
+
+      const key = String(minuteTimestamp);
+      if (!counts[key]) {
+        counts[key] = { timestamp: minuteTimestamp, count: 0 };
+      }
+      counts[key].count += 1;
+    });
+
+    return Object.values(counts)
+      .sort((a, b) => a.timestamp - b.timestamp)
+      .slice(-12)
+      .map((item) => ({
+        time: new Date(item.timestamp).toLocaleString([], {
+          month: "short",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        count: item.count,
+      }));
+  })();
+
 
   const severityData = ["High", "Medium", "Low"].map((severity) => ({
     name: severity,
@@ -370,6 +419,69 @@ export default function Home() {
                       />
                       <Legend />
                     </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 rounded-2xl border border-slate-800 bg-[#0d1829] p-5 sm:p-6">
+              <div className="mb-5">
+                <h3 className="font-semibold">Alert Timeline</h3>
+                <p className="mt-1 text-sm text-slate-500">
+                  Security alerts grouped by event timestamp
+                </p>
+              </div>
+
+              {!result ? (
+                <div className="flex min-h-56 items-center justify-center text-center text-sm text-slate-500">
+                  Analyze a CSV to view the alert timeline.
+                </div>
+              ) : timelineData.length === 0 ? (
+                <div className="flex min-h-56 items-center justify-center text-center text-sm text-slate-500">
+                  No valid alert timestamps available for the timeline.
+                </div>
+              ) : (
+                <div className="h-72 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={timelineData}
+                      margin={{ top: 10, right: 10, left: 0, bottom: 35 }}
+                    >
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="#243247"
+                        vertical={false}
+                      />
+                      <XAxis
+                        dataKey="time"
+                        tick={{ fill: "#94a3b8", fontSize: 10 }}
+                        angle={-30}
+                        textAnchor="end"
+                        interval="preserveStartEnd"
+                        stroke="#475569"
+                      />
+                      <YAxis
+                        allowDecimals={false}
+                        tick={{ fill: "#94a3b8", fontSize: 11 }}
+                        stroke="#475569"
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#0c1627",
+                          border: "1px solid #334155",
+                          borderRadius: "12px",
+                          color: "#f1f5f9",
+                        }}
+                        cursor={{ fill: "rgba(34, 211, 238, 0.06)" }}
+                      />
+                      <Bar
+                        dataKey="count"
+                        name="Alerts"
+                        fill="#22d3ee"
+                        radius={[5, 5, 0, 0]}
+                        maxBarSize={42}
+                      />
+                    </BarChart>
                   </ResponsiveContainer>
                 </div>
               )}
