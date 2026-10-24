@@ -144,7 +144,10 @@ export default function Home() {
   const alerts = result?.alerts ?? [];
 
   const timelineData = (() => {
-    const counts: Record<string, { timestamp: number; count: number }> = {};
+    const counts: Record<
+      string,
+      { timestamp: number; high: number; medium: number; low: number }
+    > = {};
 
     alerts.forEach((alert) => {
       const rawTimestamp = field(
@@ -167,9 +170,27 @@ export default function Home() {
 
       const key = String(minuteTimestamp);
       if (!counts[key]) {
-        counts[key] = { timestamp: minuteTimestamp, count: 0 };
+        counts[key] = {
+          timestamp: minuteTimestamp,
+          high: 0,
+          medium: 0,
+          low: 0,
+        };
       }
-      counts[key].count += 1;
+
+      const severity = field(
+        alert,
+        ["severity", "level", "risk"],
+        "Medium",
+      ).toLowerCase();
+
+      if (severity === "high" || severity === "critical") {
+        counts[key].high += 1;
+      } else if (severity === "low") {
+        counts[key].low += 1;
+      } else {
+        counts[key].medium += 1;
+      }
     });
 
     return Object.values(counts)
@@ -182,7 +203,9 @@ export default function Home() {
           hour: "2-digit",
           minute: "2-digit",
         }),
-        count: item.count,
+        high: item.high,
+        medium: item.medium,
+        low: item.low,
       }));
   })();
 
@@ -474,9 +497,25 @@ export default function Home() {
                         }}
                         cursor={{ fill: "rgba(34, 211, 238, 0.06)" }}
                       />
+                      <Legend />
                       <Bar
-                        dataKey="count"
-                        name="Alerts"
+                        dataKey="high"
+                        name="High"
+                        stackId="severity"
+                        fill="#fb7185"
+                        maxBarSize={42}
+                      />
+                      <Bar
+                        dataKey="medium"
+                        name="Medium"
+                        stackId="severity"
+                        fill="#fbbf24"
+                        maxBarSize={42}
+                      />
+                      <Bar
+                        dataKey="low"
+                        name="Low"
+                        stackId="severity"
                         fill="#22d3ee"
                         radius={[5, 5, 0, 0]}
                         maxBarSize={42}
