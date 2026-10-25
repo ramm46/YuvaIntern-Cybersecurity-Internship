@@ -75,6 +75,8 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [severityFilter, setSeverityFilter] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedAlert, setSelectedAlert] = useState<ApiAlert | null>(null);
+  const [investigationNotes, setInvestigationNotes] = useState("");
 
   function selectFile(selected: File | null) {
     setError("");
@@ -627,7 +629,23 @@ export default function Home() {
                     const title = field(alert, ["title", "name", "description", "message"], "Suspicious activity detected");
                     const severity = field(alert, ["severity", "level", "risk"], "Medium");
                     return (
-                      <tr key={`${field(alert, ["rule_id", "rule", "rule_code"], "alert")}-${index}`} className="transition hover:bg-slate-800/30">
+                      <tr
+                        key={`${field(alert, ["rule_id", "rule", "rule_code"], "alert")}-${index}`}
+                        onClick={() => {
+                          setSelectedAlert(alert);
+                          setInvestigationNotes("");
+                        }}
+                        tabIndex={0}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            setSelectedAlert(alert);
+                            setInvestigationNotes("");
+                          }
+                        }}
+                        className="cursor-pointer transition hover:bg-cyan-400/[0.04] focus:outline-none focus:ring-1 focus:ring-inset focus:ring-cyan-400/50"
+                        aria-label={`Investigate alert: ${field(alert, ["title", "name", "description", "message"], "Suspicious activity detected")}`}
+                      >
                         <td className="px-5 py-4">
                           <p className="font-medium text-slate-200">{title}</p>
                           <p className="mt-1 text-xs text-slate-500">{field(alert, ["id", "alert_id"], `ALT-${String(index + 1).padStart(3, "0")}`)}</p>
@@ -652,6 +670,128 @@ export default function Home() {
               </table>
             </div>
           </section>
+
+          {selectedAlert && (
+            <section
+              id="investigation"
+              className="rounded-2xl border border-cyan-400/25 bg-[#0d1829] p-5 sm:p-6"
+              aria-labelledby="investigation-title"
+            >
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-300">
+                    SOC WORKSPACE / INVESTIGATION
+                  </p>
+                  <h3 id="investigation-title" className="mt-2 text-lg font-semibold">
+                    Alert Investigation
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-400">
+                    Review the selected alert and record your local investigation notes.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedAlert(null);
+                    setInvestigationNotes("");
+                  }}
+                  className="rounded-lg border border-slate-700 px-3 py-2 text-xs text-slate-300 transition hover:bg-slate-800"
+                >
+                  Close panel
+                </button>
+              </div>
+
+              <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {[
+                  {
+                    label: "Alert",
+                    value: field(selectedAlert, ["title", "name", "description", "message"], "Suspicious activity detected"),
+                  },
+                  {
+                    label: "Severity",
+                    value: field(selectedAlert, ["severity", "level", "risk"], "Medium"),
+                  },
+                  {
+                    label: "Actor",
+                    value: field(selectedAlert, ["actor", "username", "user"]),
+                  },
+                  {
+                    label: "Timestamp",
+                    value: field(selectedAlert, ["timestamp", "time", "event_time", "detected_at"]),
+                  },
+                  {
+                    label: "Rule ID",
+                    value: field(selectedAlert, ["rule_id", "rule", "rule_code", "detection_id"]),
+                  },
+                  {
+                    label: "Alert ID",
+                    value: field(selectedAlert, ["id", "alert_id"]),
+                  },
+                ].map((detail) => (
+                  <div key={detail.label} className="min-w-0 rounded-xl border border-slate-800 bg-[#091321] p-4">
+                    <p className="text-xs text-slate-500">{detail.label}</p>
+                    <p className="mt-2 break-words text-sm font-medium text-slate-200">{detail.value}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-5 rounded-xl border border-slate-800 bg-[#091321] p-4">
+                <h4 className="text-sm font-semibold text-slate-200">Suggested investigation steps</h4>
+                <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-6 text-slate-400">
+                  <li>Verify the actor and event timestamp against the original log records.</li>
+                  <li>Review related authentication events and nearby activity for the same actor.</li>
+                  <li>Validate the detection rule and check whether the activity is expected.</li>
+                  <li>Document evidence and escalate according to your incident response process.</li>
+                </ol>
+                <p className="mt-3 text-xs text-amber-300/90">
+                  These are analyst prompts, not proof that an incident has occurred.
+                </p>
+              </div>
+
+              <div className="mt-5">
+                <label htmlFor="investigation-notes" className="text-sm font-medium text-slate-200">
+                  Investigation notes
+                </label>
+                <textarea
+                  id="investigation-notes"
+                  value={investigationNotes}
+                  onChange={(event) => setInvestigationNotes(event.target.value)}
+                  placeholder="Record observations, evidence checked, and next actions..."
+                  rows={4}
+                  className="mt-2 w-full rounded-xl border border-slate-700 bg-[#091321] px-4 py-3 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-cyan-400"
+                />
+                <p className="mt-2 text-xs text-slate-500">
+                  Notes stay in this page session only; they are not saved to the backend or database.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      navigator.clipboard.writeText(
+                        `Alert Investigation\n` +
+                        `Title: ${field(selectedAlert, ["title", "name", "description", "message"], "Suspicious activity detected")}\n` +
+                        `Severity: ${field(selectedAlert, ["severity", "level", "risk"], "Medium")}\n` +
+                        `Actor: ${field(selectedAlert, ["actor", "username", "user"])}\n` +
+                        `Timestamp: ${field(selectedAlert, ["timestamp", "time", "event_time", "detected_at"])}\n` +
+                        `Rule ID: ${field(selectedAlert, ["rule_id", "rule", "rule_code", "detection_id"])}\n\n` +
+                        `Investigation Notes:\n${investigationNotes}`,
+                      )
+                    }
+                    className="rounded-xl bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200"
+                  >
+                    Copy investigation summary
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setInvestigationNotes("")}
+                    className="rounded-xl border border-slate-700 px-4 py-2.5 text-sm text-slate-300 transition hover:bg-slate-800"
+                  >
+                    Clear notes
+                  </button>
+                </div>
+              </div>
+            </section>
+          )}
 
           {result && result.invalid_rows.length > 0 && (
             <section className="rounded-2xl border border-rose-400/20 bg-[#0d1829] p-5 sm:p-6">
