@@ -1,0 +1,36 @@
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.venv/
+venv/
+env/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Logs and local test outputs
+*.log
+
+# Next.js
+.next/
+out/
+node_modules/
+.turbo/
+
+# Build outputs
+build/
+dist/
+
+# Coverage
+.coverage
+htmlcov/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
