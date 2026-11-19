@@ -356,10 +356,12 @@ export default function Home() {
         <div className="mt-10 rounded-xl border border-slate-800 bg-[#101d30] p-4">
           <div className="flex items-center gap-2 text-sm font-medium">
             <span className={`h-2 w-2 rounded-full ${error ? "bg-rose-400" : result ? "bg-emerald-400" : "bg-amber-400"}`} />
-            Local API
+            Production API
           </div>
           <p className="mt-2 text-xs text-slate-500">Endpoint</p>
-          <p className="break-all text-xs text-cyan-300">127.0.0.1:8000</p>
+          <p className="break-all text-xs text-cyan-300">
+  {API_URL.replace(/\/api\/analyze$/, "")}
+</p>
           <p className="mt-2 text-xs text-slate-500">{result ? "Analysis completed" : error ? "Check connection or input" : "Ready for analysis"}</p>
         </div>
 
@@ -377,7 +379,7 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/70 px-3 py-2 text-xs text-slate-300">
             <span className={`h-2 w-2 rounded-full ${result ? "bg-emerald-400" : "bg-amber-400"}`} />
-            {result ? "Analysis complete" : "Local development"}
+            {result ? "Analysis complete" : "Production deployment"}
           </div>
         </header>
 
@@ -553,7 +555,7 @@ export default function Home() {
             <button type="button" onClick={analyzeLogs} disabled={!file || loading} className="mt-4 w-full rounded-xl bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400 sm:w-auto">
               {loading ? "Analyzing logs…" : "Analyze Logs →"}
             </button>
-            <p className="mt-3 text-xs text-slate-500">Files are sent to your local SentinelLite API for analysis.</p>
+            <p className="mt-3 text-xs text-slate-500">Files are securely sent to the SentinelLite production API for analysis.</p>
           </section>
 
           <section id="alerts" className="overflow-hidden rounded-2xl border border-slate-800 bg-[#0d1829]">
@@ -820,7 +822,7 @@ export default function Home() {
             </div>
           </section>
 
-          <footer className="border-t border-slate-800 pt-5 text-xs text-slate-600">SentinelLite · Rule-based security log analysis · Local development</footer>
+          <footer className="border-t border-slate-800 pt-5 text-xs text-slate-600">SentinelLite · Rule-based security log analysis · Production deployment</footer>
         </div>
       </section>
     </main>
