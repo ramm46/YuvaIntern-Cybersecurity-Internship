@@ -652,7 +652,13 @@ export default function Home() {
                       >
                         <td className="px-5 py-4">
                           <p className="font-medium text-slate-200">{title}</p>
-                          <p className="mt-1 text-xs text-slate-500">{field(alert, ["id", "alert_id"], `ALT-${String(index + 1).padStart(3, "0")}`)}</p>
+                          <p className="mt-1 text-xs text-slate-500">
+  {field(
+    alert,
+    ["id", "alert_id"],
+    `ALT-${String((result?.alerts.indexOf(alert) ?? index) + 1).padStart(3, "0")}`
+  )}
+</p>
                         </td>
                         <td className="px-5 py-4 font-mono text-slate-300">{field(alert, ["actor", "username", "user"])}</td>
                         <td className="px-5 py-4"><span className="rounded-md border border-slate-700 px-2 py-1 text-xs text-slate-300">{field(alert, ["rule_id", "rule", "rule_code", "detection_id"])}</span></td>
@@ -729,7 +735,11 @@ export default function Home() {
                   },
                   {
                     label: "Alert ID",
-                    value: field(selectedAlert, ["id", "alert_id"]),
+                    value: field(
+                      selectedAlert,
+                      ["id", "alert_id"],
+                      `ALT-${String((result?.alerts.indexOf(selectedAlert) ?? 0) + 1).padStart(3, "0")}`
+                    ),
                   },
                 ].map((detail) => (
                   <div key={detail.label} className="min-w-0 rounded-xl border border-slate-800 bg-[#091321] p-4">
