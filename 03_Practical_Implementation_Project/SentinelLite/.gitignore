@@ -9,3 +9,5 @@ htmlcov/
 ~$*.docx
 
 docs_backup_old/
+
+data/performance_test_*.csv

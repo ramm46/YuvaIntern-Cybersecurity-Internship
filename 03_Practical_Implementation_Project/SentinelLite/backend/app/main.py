@@ -4,6 +4,7 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from backend.app.detection_engine import detect_security_alerts
 from backend.app.log_parser import parse_security_logs
 from fastapi.middleware.cors import CORSMiddleware
+import os
 
 app = FastAPI(
     title="SentinelLite API",
@@ -11,9 +12,20 @@ app = FastAPI(
     version="1.0.0",
 )
 
+FRONTEND_ORIGINS = os.getenv(
+    "FRONTEND_ORIGINS",
+    "http://localhost:3000,http://127.0.0.1:3000",
+)
+
+allowed_origins = [
+    origin.strip()
+    for origin in FRONTEND_ORIGINS.split(",")
+    if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=allowed_origins,
     allow_credentials=False,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],

@@ -34,7 +34,9 @@ type ApiResult = {
   alerts: ApiAlert[];
 };
 
-const API_URL = "http://127.0.0.1:8000/api/analyze";
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://127.0.0.1:8000/api/analyze";
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 function field(
